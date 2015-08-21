@@ -1,0 +1,47 @@
+//Net device routines 
+static int rtl8150_open(struct net_device *netdev)
+{
+        printk(KERN_INFO "Entering %s\n", __FUNCTION__);
+
+        int res;
+        /* Get address of private structure from net_device */
+
+        /* CODE HERE */
+
+	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev,0),
+                RTL8150_REQ_SET_REGS, RTL8150_REQT_WRITE,IDR,0,
+                        netdev->dev_addr, sizeof(netdev->dev_addr),500);
+
+        /*
+         * Driver sets up pipes to bulk IN (EP 1) endpoint for
+         * receiving packets, bulk OUT (EP 2) for transmitting packets 
+         * and to interrupt IN (EP 3) endpoint for receiving device errors 
+	 * and link status from the device:
+         *
+         * 1- Allocate memory for bulk IN, OUT and interrupt urb
+         * 2- Allocate memory for sk_buff for bulk IN urb - receive
+         * 3- Populate bulk IN urb and register call back function
+	 * 	NOTE: Make sure to allocate memory for intr_buff 
+         * 4- Populate interrupt urb and register call back function
+         * 5- Submit bulk IN and interrupt urb
+	 *
+	 * NOTE: Driver submits urb to bulk OUT EP from rtl8150_start_xmit
+	 * when the driver receives sk_buff from the protocol layer
+         */
+
+        /* CODE HERE */
+
+        printk (KERN_INFO "\n Submit Rx and Intr urbs\n");
+
+        // Initialize the hardware to make sure it is ready
+        rtl8150_hardware_start(netdev);
+
+        /* Notify the protocol layer so that it can start sending packet */
+
+        /* CODE HERE */
+
+        printk(KERN_INFO "Exiting %s\n", __FUNCTION__);
+
+        return res;
+}
+

@@ -1,0 +1,14 @@
+The project contains work in progress for rtl8150 usb card. 
+
+Current Status:
+
+* device boots creates interface and register device methods
+* device gets activated and network later to send packets.
+
+Known issues:
+
+* Currently dealing with issues receiving status interrupts.
+* Checks on packet arrival get bogus packets of 0 length 
+  which need to be skipped
+
+This driver is still a work in progress.

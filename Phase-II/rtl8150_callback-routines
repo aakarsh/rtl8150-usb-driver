@@ -1,0 +1,156 @@
+// USB device bulk IN, OUT and Interrupt callback routines
+
+static void read_bulk_callback(struct urb *urb)
+{
+        rtl8150_t *priv;
+        int res, pkt_len;
+	int status;
+
+	// Get access to priv struct and status of urb
+	
+	/* CODE HERE */
+
+        switch (status) {
+        case 0:                 //success
+                break;
+        case -ENOENT:
+                return; /* the urb is in unlink state */
+        case -ETIME:
+                 printk("\n Reschedule it. Could be a problem with device\n");
+                 goto reschedule;
+        default:
+                 printk("\nRx status %d\n", status);
+                goto reschedule;
+        }
+
+        // we come here after receiving success status of urb
+        res = urb->actual_length;       //Amount of data receieved in urb
+        pkt_len = res - 4;
+
+        /**
+	  * 1-  Use skb_put to set skb->len and skb->tail 
+		to actual payload
+          * 2-  Set protocol field in skb
+	  * 3-  Hand over the packet to protocol layer
+	  * 4-  Increment rx_packet and rx_bytes
+	  */	
+
+	  /* CODE HERE */
+
+reschedule:     //submit again for next packet receive from the device
+
+	/**
+	  * Allocate sk_buff again and point priv->rx_skb to it
+	  * populate bulk URB, Don't need to allocate urb, reuse it.
+	  * submit urb. 
+	  * CAUTION: code is running in atomic or /interrupt context
+	  */
+	
+	/* CODE HERE */
+	  
+        return;
+
+}
+
+static void write_bulk_callback(struct urb *urb)
+{
+        printk(KERN_INFO "Entering %s\n", __FUNCTION__);
+
+        rtl8150_t *priv;
+
+	// Get access to priv struct and status of urb
+
+	/* CODE HERE */
+
+        switch (status) {
+        case 0:                 //success
+                break;
+        case -ENOENT:
+                return; /*urb is in unlink state */
+        case -ETIME:
+                 printk("\n Could be a problem with device\n");
+                goto reenable;
+        default:
+                printk("\n%s: Tx status %d\n", priv->netdev->name, status);
+                goto reenable;
+        }
+
+        // urb was transmitted successfully
+	// Increment tx_packets and  tx_bytes
+
+	/* CODE HERE */
+
+        printk(KERN_INFO "\n%s: Queued Tx packet at %p size %u\n",
+                                 priv->netdev->name, priv->tx_skb->data,
+                                        priv->tx_skb->len);
+
+        dev_kfree_skb_irq(priv->tx_skb);    //free skb, atomic context
+
+        /**
+          * Protocol layer should take care of error recovery. 
+	  * We should just enable the queue so that protocol layer 
+	  * continue to send skb_buff to us.
+          */
+
+reenable:	//enable the queue 
+
+	/* CODE HERE */
+
+        return;
+}
+
+static void intr_callback(struct urb *urb)
+{
+        rtl8150_t *priv;
+        __u8 *d;
+
+	// Get access to priv struct and status of urb
+
+	/* CODE HERE */
+
+        switch (status) {
+        case 0:                 /* success */
+                break;
+        case -ECONNRESET:       /* unlink */
+        case -ENOENT:
+        case -ESHUTDOWN:
+                return;
+        default:
+
+                printk("\n%s: intr status %d\n", priv->netdev->name, status);
+                goto resubmit;
+        }
+
+        // We get here when status is set to success
+
+        d = urb->transfer_buffer;
+        if (d[0] & TSR_ERRORS) {
+                priv->stats.tx_errors++;
+                if (d[INT_TSR] & (TSR_ECOL | TSR_JBR))
+                        priv->stats.tx_aborted_errors++;
+                if (d[INT_TSR] & TSR_LCOL)
+                        priv->stats.tx_window_errors++;
+                if (d[INT_TSR] & TSR_LOSS_CRS)
+                        priv->stats.tx_carrier_errors++;
+        }
+
+        /* Report link status changes to the network stack */
+        if ((d[INT_MSR] & MSR_LINK) == 0) {
+               if (netif_carrier_ok(priv->netdev)) {
+                        netif_carrier_off(priv->netdev);
+                        printk("%s: LINK LOST\n", __func__);
+                }
+        } else {
+                if (!netif_carrier_ok(priv->netdev)) {
+                        netif_carrier_on(priv->netdev);
+                        printk("%s: LINK CAME BACK\n", __func__);
+                }
+        }
+
+resubmit:
+        usb_submit_urb (urb, GFP_ATOMIC);
+
+        return;
+}
+
+

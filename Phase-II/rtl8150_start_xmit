@@ -1,0 +1,36 @@
+static int rtl8150_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+{
+        int count,res;
+
+        // Get address of private struct 
+
+        /* CODE HERE */
+
+        printk(KERN_INFO "Entering %s\n", __FUNCTION__);
+
+	// Make sure to stop the queue. Driver enable it when urb is completed
+
+	/* CODE HERE */	
+	
+	// Point tx_skb in private struct to skb recieved from protocol layer
+
+	 /* CODE HERE */
+
+	// Minimum packet length is 60 bytes
+        count = (skb->len < 60) ? 60 : skb->len;
+
+	/**
+	  * Populate bulk OUT urb and register call back function
+          * Submit urb to bulk OUT endpoint to USB core
+	  * If submit urb fail, increment tx_errors count
+	  * and renable the queue. 
+	  * If urb is submitted successfully, just return 
+          * Don't increment tx_packets, tx_bytes. It should be done 
+	  * from call_back routine after successful status is recieved
+	  */
+
+	/* CODE HERE */
+
+
+        return res;
+}

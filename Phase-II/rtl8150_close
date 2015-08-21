@@ -1,0 +1,35 @@
+static int rtl8150_close(struct net_device *netdev)
+{
+	u8 cr;
+
+         /* Get address of private structure and ioaddr */
+
+        /* CODE HERE */
+
+        printk(KERN_INFO "Entering %s\n", __FUNCTION__);
+
+        //Notify protocol layer not to send any more packet to this interface
+
+        /* CODE HERE */
+
+        printk (KERN_INFO "\nrtl8150_close: shuting down the interface");
+
+        // get the value of CR register into cr using usb_control_msg
+	
+	/* CODE HERE */
+	
+        cr &= 0xf3;
+
+	// Set the CR register to what is in cr  using usb_control_msg
+
+        /* CODE HERE */
+
+        /* Unlink all urbs */
+
+        /* CODE HERE */
+
+        printk("Exiting %s\n", __FUNCTION__);
+
+        return 0;
+
+}
